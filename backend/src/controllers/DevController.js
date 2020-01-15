@@ -73,7 +73,12 @@ module.exports = {
         return response.json({ dev });
     },
 
-    async destroy(){
-        // To-Do create the delete function
+    async destroy(request, response){
+        
+        const { github_username } = request.params;
+
+        let dev = await Dev.deleteOne({ github_username });
+
+        return response.json({ dev });
     },
 };
