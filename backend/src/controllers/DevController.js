@@ -39,8 +39,38 @@ module.exports = {
         return response.json(dev);
     },
 
-    async update(){
-        // To-Do create the update function
+    async update(request, response){
+
+        const { github_username } = request.params;
+
+        const { name, bio, avatar_url, techs, latitude, longitude } = request.body;
+        
+        let dev = await Dev.findOne({ github_username });
+
+        if (dev) {
+            let updateValues = {};
+
+            if (name) {
+                updateValues['name'] = name;
+            };
+            if (bio) {
+                updateValues['bio'] = bio;
+            };
+            if (avatar_url) {
+                updateValues['techs'] = parseStringAsArray(techs);
+            };
+            if (latitude && longitude) {
+                const location = {
+                    type: 'Point',
+                    coordinates: [longitude, latitude],
+                };
+            };
+
+            dev = await Dev.updateOne({github_username}, updateValues);
+
+        };
+
+        return response.json({ dev });
     },
 
     async destroy(){
