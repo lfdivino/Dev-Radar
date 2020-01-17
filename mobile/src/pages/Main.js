@@ -5,10 +5,12 @@ import MapView, { Marker, Callout } from 'react-native-maps';
 import { MaterialIcons } from '@expo/vector-icons';
 
 import api from '../services/api';
+import { connect, disconnect, subscribeToNewDevs } from '../services/socket';
 
 function Main({ navigation }) {
     const [currentRegion, setCurrentRegion] = useState(null);
     const [devs, setDevs] = useState([]);
+    const [techs, setTechs] = useState('');
 
     useEffect(() => {
       async function loadInitialPosition() {
@@ -33,22 +35,41 @@ function Main({ navigation }) {
       loadInitialPosition();
     }, [])
 
+    useEffect(() => {
+        subscribeToNewDevs(dev => setDevs([...devs, dev]))
+    }, [devs]);
+
+    function setupWebsocket() {
+        disconnect();
+
+        const { latitude, longitude } = currentRegion;
+
+        connect(
+            latitude,
+            longitude,
+            techs
+        );
+    }
+
     async function loadDevs() {
         const { latitude, longitude } = currentRegion;
+
+        console.log()
 
         const response = await api.get('/search', {
             params: {
                 latitude,
                 longitude,
-                techs: "Python",    
+                techs,    
             }
         });
 
         setDevs(response.data);
+        setupWebsocket();
     }
 
     function handleRegionChanged(region) {
-        setCurrentRegion(region)
+        setCurrentRegion(region);
     }
 
     if (!currentRegion) {
@@ -79,6 +100,8 @@ function Main({ navigation }) {
                     placeholderTextColor="#999"
                     autoCapitalize="words"
                     autoCorrect={false}
+                    value={techs}
+                    onChangeText={text => setTechs(text)}
                 />
                 <TouchableOpacity onPress={loadDevs} style={styles.loadButton}>
                     <MaterialIcons name="my-location" size={20} color="#FFF" />
